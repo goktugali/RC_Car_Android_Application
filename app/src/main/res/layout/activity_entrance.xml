@@ -1,0 +1,286 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/gradient_background"
+    android:gravity="center"
+    android:orientation="vertical"
+    tools:context=".Activities.EntranceActivity">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/baglantiDurumuBilgiTextView"
+                    android:layout_width="115dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:layout_marginStart="12dp"
+                    android:text="@string/baglanti_durumu_bilgi_text"
+                    android:textAlignment="viewStart"
+                    android:textColor="#ffffff"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/baglantiDurumuTextView"
+                    android:layout_width="80dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="@string/baglanti_durumu_bagli_degil_text"
+                    android:textAlignment="viewStart"
+                    android:textColor="#ffffff"
+                    android:textSize="14sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/bataryaBilgiText"
+                    android:layout_width="55dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:text="@string/batarya_bilgi_text"
+                    android:textAlignment="viewStart"
+                    android:textColor="#ffffff"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/bataryaYuzdesiTextView"
+                    android:layout_width="40dp"
+                    android:layout_height="wrap_content"
+                    android:text="%0"
+                    android:textAlignment="viewStart"
+                    android:textColor="#ffffff"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/crcDurumuText"
+                    android:layout_width="20dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="20dp"
+                    android:text="●"
+                    android:textAlignment="viewStart"
+                    android:textColor="#ffffff"
+                    android:textSize="14sp" />
+
+
+
+
+            </LinearLayout>
+
+
+
+        </LinearLayout>
+
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <Button
+            android:id="@+id/ready_button"
+            android:layout_width="100dp"
+            android:layout_height="25dp"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/rounded_button_background"
+            android:text="@string/ready_button_text"
+            android:textColor="#356b9c"
+            android:textSize="14sp" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <Spinner
+            android:id="@+id/bluuetooth_device_select_spinner"
+            android:layout_width="100dp"
+            android:layout_height="25dp"
+            android:layout_marginTop="10dp"
+            android:textColor="#ffffff">
+        </Spinner>
+
+        <View
+            android:layout_width="20dp"
+            android:layout_height="0dp"
+            android:layout_weight="0" />
+
+        <Button
+            android:id="@+id/connect_button"
+            android:layout_width="100dp"
+            android:layout_height="25dp"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/rounded_button_background"
+            android:text="@string/connect_button_text"
+            android:textColor="#356b9c"
+            android:textSize="14sp" />
+
+        <View
+            android:layout_width="20dp"
+            android:layout_height="0dp"
+            android:layout_weight="0" />
+
+    </LinearLayout>
+
+    <View
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginStart="60dp">
+            <TextView
+                android:id="@+id/rakip_skor_bilgi_textView"
+                android:layout_width="180dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:textAlignment="center"
+                android:textSize="28sp"
+                android:textColor="#ffffff"
+                android:text="RAKİP"/>
+
+            <TextView
+                android:id="@+id/rakip_skor_textView"
+                android:layout_width="100dp"
+                android:textSize="22sp"
+                android:layout_gravity="center_horizontal"
+                android:textAlignment="center"
+                android:layout_height="wrap_content"
+                android:textColor="#ffffff"
+                android:text="0"/>
+        </LinearLayout>
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_gravity="center"
+            android:layout_marginEnd="60dp">
+            <TextView
+                android:id="@+id/kullanici_skor_bilgi_textView"
+                android:layout_width="180dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:textAlignment="center"
+                android:textSize="28sp"
+                android:textColor="#ffffff"
+                android:text="-"/>
+
+            <TextView
+                android:id="@+id/kullanici_skor_textView"
+                android:layout_width="100dp"
+                android:textSize="22sp"
+                android:layout_gravity="center_horizontal"
+                android:textAlignment="center"
+                android:layout_height="wrap_content"
+                android:textColor="#ffffff"
+                android:text="0"/>
+        </LinearLayout>
+
+    </LinearLayout>
+    <View
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="20dp">
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_gravity="center">
+            <Button
+                android:id="@+id/fire_button"
+                android:layout_width="100dp"
+                android:layout_height="35dp"
+                android:layout_marginStart="20dp"
+                android:background="@drawable/rounded_button_background"
+                android:text="@string/fire_button_text"
+                android:textColor="#356b9c"
+                android:textSize="14sp"/>
+
+            <Switch
+                android:id="@+id/gear_switch"
+                android:layout_width="wrap_content"
+                android:layout_marginTop="30dp"
+                android:layout_marginStart="15dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:fontFamily="sans-serif-condensed"
+                android:textOff="@string/gear_d_text"
+                android:showText="true"
+                android:textOn="@string/gear_r_text"/>
+
+        </LinearLayout>
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <TextView
+            android:id="@+id/wheelAngleText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#356b9c"
+            android:textSize="14sp"
+            android:layout_gravity="center"
+            android:text="0°">
+        </TextView>
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <FrameLayout
+            android:layout_width="32dp"
+            android:layout_height="132dp">
+
+            <SeekBar
+                android:id="@+id/seekBarThrottle"
+                android:layout_width="132dp"
+                android:layout_height="32dp"
+                android:layout_gravity="center"
+                android:rotation="270" />
+        </FrameLayout>
+
+        <View
+            android:layout_width="20dp"
+            android:layout_height="0dp"
+            android:layout_weight="0" />
+
+    </LinearLayout>
+
+
+</LinearLayout>
