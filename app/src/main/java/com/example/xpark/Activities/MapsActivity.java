@@ -126,10 +126,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     @VisibleForTesting
     private void checkBanned() {
         if (currentUser.getBanned()) {
-            Intent intent = new Intent(this, BannedActivity.class);
-            intent.putExtra("CURRENT_USER", currentUser);
-            this.startActivity(intent);
-            finish();
         }
     }
 
@@ -171,33 +167,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     @VisibleForTesting
     private boolean onDrawerItemSelected(MenuItem item) {
         int LAUNCH_SECOND_ACTIVITY = 1;
-        if(item.getItemId() == R.id.nav_third_fragment){
-            SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
-            settings.edit().clear().commit();
-
-            Intent intent = new Intent(this, LoginActivity.class);
-            this.startActivity(intent);
-            finish();
-
-            //close navigation drawer
-            mDrawer.closeDrawer(GravityCompat.START);
-            return true;
-        } else if(item.getItemId() == R.id.nav_second_fragment){
-            Intent intent = new Intent(this, BalanceActivity.class);
-            intent.putExtra("CURRENT_USER", currentUser);
-            this.startActivityForResult(intent,LAUNCH_SECOND_ACTIVITY);
-
-            //close navigation drawer
-            mDrawer.closeDrawer(GravityCompat.START);
-            return true;
-        } else {
-            Intent intent = new Intent(this, ProfileActivity.class);
-            intent.putExtra("CURRENT_USER", currentUser);
-            this.startActivityForResult(intent,LAUNCH_SECOND_ACTIVITY);
-
-            mDrawer.closeDrawer(GravityCompat.START);
-            return true;
-        }
+        return true;
     }
 
     @Override

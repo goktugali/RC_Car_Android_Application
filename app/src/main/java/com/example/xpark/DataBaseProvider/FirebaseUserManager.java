@@ -1,16 +1,14 @@
 package com.example.xpark.DataBaseProvider;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
-import com.example.xpark.Activities.LoginActivity;
+
 import com.example.xpark.Activities.MapsActivity;
-import com.example.xpark.Activities.ParkingInformationActivity;
 import com.example.xpark.Module.CarPark;
 import com.example.xpark.Utils.ToastMessageConstants;
 import com.example.xpark.Module.User;
@@ -205,12 +203,6 @@ public class FirebaseUserManager {
                         public void onDataChange(@NonNull DataSnapshot snapshot) {
                             CarPark getted_carpark = new CarPark(snapshot);
                             System.out.println("1) user carpark : " + getted_carpark);
-
-                            Intent intent = new Intent(activity_ref, ParkingInformationActivity.class);
-                            intent.putExtra("CURRENT_USER", getted_user);
-                            intent.putExtra("CARPARK", getted_carpark);
-                            activity_ref.startActivity(intent);
-                            activity_ref.finish();
                         }
 
                         @Override

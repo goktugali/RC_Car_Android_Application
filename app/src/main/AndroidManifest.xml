@@ -39,30 +39,9 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".Activities.SignUpActivity"
-            android:screenOrientation="portrait"
-            android:theme="@style/Theme.GradientActivity" />
-        <activity
-            android:name=".Activities.LoginActivity"
-            android:screenOrientation="portrait"
-            android:theme="@style/Theme.GradientActivity" />
-        <activity
-            android:name=".Activities.ForgotPasswordActivity"
-            android:screenOrientation="portrait"
-            android:theme="@style/Theme.GradientActivity" />
-        <activity
             android:name=".Activities.MapsActivity"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.NoActionBar" />
-        <activity android:name=".Activities.ScanCodeActivity" />
-        <activity
-            android:name=".Activities.ParkingInformationActivity"
-            android:screenOrientation="portrait"
-            android:theme="@style/Theme.NoActionBar" />
-        <activity android:name=".Activities.PaymentActivity" />
-        <activity android:name=".Activities.BalanceActivity" />
-        <activity android:name=".Activities.BannedActivity" />
-        <activity android:name=".Activities.ProfileActivity" />
     </application>
 
 </manifest>

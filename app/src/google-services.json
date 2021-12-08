@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "890959018117",
+    "firebase_url": "https://rc-car-battle-default-rtdb.firebaseio.com",
+    "project_id": "rc-car-battle",
+    "storage_bucket": "rc-car-battle.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:890959018117:android:ecd2a612bb1f834fca91ec",
+        "android_client_info": {
+          "package_name": "com.example.xpark"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "890959018117-a8iqk767gm583nio70vt7rlr4alpkoo8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC7xkIGoRcpcl_d5WgTdHzD1hzBs7E8R98"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "890959018117-a8iqk767gm583nio70vt7rlr4alpkoo8.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -78,12 +78,7 @@
                     android:textColor="#ffffff"
                     android:textSize="14sp" />
 
-
-
-
             </LinearLayout>
-
-
 
         </LinearLayout>
 
@@ -93,15 +88,31 @@
             android:layout_height="0dp"
             android:layout_weight="1" />
 
-        <Button
-            android:id="@+id/ready_button"
-            android:layout_width="100dp"
-            android:layout_height="25dp"
-            android:layout_marginTop="10dp"
-            android:background="@drawable/rounded_button_background"
-            android:text="@string/ready_button_text"
-            android:textColor="#356b9c"
-            android:textSize="14sp" />
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="60dp"
+            android:orientation="vertical">
+            <Button
+                android:id="@+id/button_ready"
+                android:layout_width="100dp"
+                android:layout_height="25dp"
+                android:layout_marginStart="25dp"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/rounded_button_background"
+                android:text="@string/start_button_text"
+                android:textColor="#356b9c"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/macDurumuTextView"
+                android:layout_width="120dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="20dp"
+                android:text=""
+                android:textAlignment="viewStart"
+                android:textColor="#ffffff"
+                android:textSize="14sp" />
+        </LinearLayout>
 
         <View
             android:layout_width="0dp"
@@ -161,7 +172,7 @@
                 android:textAlignment="center"
                 android:textSize="28sp"
                 android:textColor="#ffffff"
-                android:text="RAKİP"/>
+                android:text="-"/>
 
             <TextView
                 android:id="@+id/rakip_skor_textView"

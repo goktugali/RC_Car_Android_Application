@@ -1,6 +1,7 @@
-// Version : 0.0.1
+// Version : 0.0.2
 package com.example.xpark.Activities;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.annotation.SuppressLint;
@@ -14,6 +15,7 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
@@ -27,20 +29,28 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.xpark.R;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Set;
 import java.util.UUID;
 import android.os.Vibrator;
 
-public class EntranceActivity extends AppCompatActivity implements SensorEventListener {
-
+public class EntranceActivity extends AppCompatActivity implements SensorEventListener
+{
     private SeekBar throttleSeekBar;
     private Button buttonConnect;
     private Button buttonFireTrigger;
+    private Button buttonReady;
     private TextView wheelAngleTextView;
     private TextView btBaglantiDurumuTextView;
     private Switch gearPositionSwitch;
@@ -50,6 +60,7 @@ public class EntranceActivity extends AppCompatActivity implements SensorEventLi
     private TextView rakipSkorTextView; // rakip skor bilgisi.
     private TextView kullaniciSkorTextView; // kullanici (ben) skor bilgisi.
     private TextView bataryaBilgiTextView; // batarya bilgisi.
+    private TextView macDurumuTextView; // mac durum bilgisi.
 
     private SensorManager mSensorManager;
     Sensor accelerometer;
@@ -95,6 +106,21 @@ public class EntranceActivity extends AppCompatActivity implements SensorEventLi
 
     private Vibrator vibrator;
 
+    /* Databse Operations */
+    private final String RC_BATTLE_SESSION_DB_FILED = "rc_battle_session";
+    private boolean battle_session_connection = false;
+    private boolean battleSessionUpdaterThreadStopped = false;
+    private boolean battleSessionReceiverThreadStopped = false;
+    private final Object battleSessionUpdaterMutex = new Object();
+    private final Object battleSessionReceiverMutex = new Object();
+    private final Object userScoreMutex = new Object();
+    private final Object enemyScoreMutex = new Object();
+    private boolean enemyConnected = false;
+    private String connectedEnemyID;
+    private boolean cancelClickedByOwn = false;
+    /* Databse Operations */
+
+    @SuppressLint("RestrictedApi")
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -226,6 +252,10 @@ public class EntranceActivity extends AppCompatActivity implements SensorEventLi
         this.buttonFireTrigger = (Button)findViewById(R.id.fire_button);
         /* FIRE BUTTON */
 
+        /* READY BUTTON */
+        this.buttonReady = (Button)findViewById(R.id.button_ready);
+        /* READY BUTTON */
+
         /* wheel angle text view */
         this.wheelAngleTextView = (TextView)findViewById(R.id.wheelAngleText);
         /* wheel angle text view */
@@ -239,12 +269,14 @@ public class EntranceActivity extends AppCompatActivity implements SensorEventLi
         /* Gear Position Switch */
 
         this.baglanilanAracDeviceNameTextView = (TextView)findViewById(R.id.kullanici_skor_bilgi_textView);
+        this.baglanilanAracDeviceNameTextView.setText("ASD"); // Todo : kaldirilacak.
         this.kullaniciSkorTextView = (TextView)findViewById(R.id.kullanici_skor_textView);
 
         this.rakipAracDeviceNameTextView = (TextView)findViewById(R.id.rakip_skor_bilgi_textView);
         this.rakipSkorTextView = (TextView)findViewById(R.id.rakip_skor_textView);
 
         this.bataryaBilgiTextView = (TextView)findViewById(R.id.bataryaYuzdesiTextView);
+        this.macDurumuTextView = (TextView)findViewById(R.id.macDurumuTextView);
 
         /* CRC durumu blinker */
         new Thread(() ->
@@ -261,9 +293,11 @@ public class EntranceActivity extends AppCompatActivity implements SensorEventLi
                         boolean timeout_crc = difference > 5000;
                         this.runOnUiThread(() -> {
                             TextView v = findViewById(R.id.crcDurumuText);
-                            if (timeout_crc) {
+                            if (timeout_crc)
+                            {
                                 v.setTextColor(Color.RED);
                             } else {
+
                                 v.setTextColor(Color.GREEN);
                             }
                             findViewById(R.id.crcDurumuText).setVisibility(View.INVISIBLE);
@@ -375,6 +409,18 @@ public class EntranceActivity extends AppCompatActivity implements SensorEventLi
             }
         });
 
+        this.buttonReady.setOnClickListener(v -> {
+            if(!this.battle_session_connection)
+            {
+                this.cancelClickedByOwn = false;
+                connectOnlineBattleSession();
+            }
+            else
+            {
+                this.cancelClickedByOwn = true;
+                disconnectOnlineBattleSession();
+            }
+        });
     }
 
     private void init_bluetooth()
@@ -459,9 +505,11 @@ public class EntranceActivity extends AppCompatActivity implements SensorEventLi
                     System.out.println("GUI Threadinin Bitmesi Bekleniyor...");
                 }
 
-
                 this.runOnUiThread(() -> {
-                    this.kullaniciSkorTextView.setText("0");
+                    synchronized (userScoreMutex)
+                    {
+                        this.kullaniciSkorTextView.setText("0");
+                    }
                     this.bataryaBilgiTextView.setText("0");
                 });
 
@@ -614,7 +662,10 @@ public class EntranceActivity extends AppCompatActivity implements SensorEventLi
 
                                                 int scoreOld = Integer.parseInt(kullaniciSkorTextView.getText().toString());
                                                 EntranceActivity.this.scoreUpdateDone = false;
-                                                kullaniciSkorTextView.setText("" + receivedDataBuffer[3]);
+                                                synchronized (this.userScoreMutex)
+                                                {
+                                                    kullaniciSkorTextView.setText("" + receivedDataBuffer[3]);
+                                                }
                                                 bataryaBilgiTextView.setText("" + receivedDataBuffer[2]);
                                                 EntranceActivity.this.scoreUpdateDone = true;
                                                 int scoreNew = Integer.parseInt(kullaniciSkorTextView.getText().toString());
@@ -766,5 +817,305 @@ public class EntranceActivity extends AppCompatActivity implements SensorEventLi
         private static final int PACKET_RECEIVE_STATE_CRC_CHECK = 4;
         private static final int PACKET_RECEIVE_SUSPENDED = 5;
         private static final int PACKET_RECEIVE_STATE_NUM = 6;
+    }
+
+    /* Database operations */
+    public void connectOnlineBattleSession()
+    {
+        System.out.println("RC Battle Baglanti gerceklestiriliyor...");
+        this.buttonReady.setClickable(false);
+        new Thread(() ->
+        {
+            HashMap<String, String> newEntry = new HashMap<>();
+            String target_car_id = this.baglanilanAracDeviceNameTextView.getText().toString();
+            newEntry.put("score","0");
+            newEntry.put("timestamp","0");
+
+            DatabaseReference ref = FirebaseDatabase.getInstance().getReference(RC_BATTLE_SESSION_DB_FILED).child(target_car_id);
+            ref.setValue(newEntry).addOnCompleteListener(task -> {
+                if(task.isSuccessful())
+                {
+                    EntranceActivity.this.battle_session_connection = true;
+                    EntranceActivity.this.runOnUiThread(() -> {
+                        EntranceActivity.this.buttonReady.setClickable(true);
+                        EntranceActivity.this.buttonReady.setText(R.string.cancel_button_text);
+                        System.out.println("Baglanti tamamlandi.");
+                    });
+                    this.startBattleSessionUpdaterThread();
+                }
+                else
+                {
+                    EntranceActivity.this.runOnUiThread(() -> {
+                        EntranceActivity.this.buttonReady.setClickable(true);
+                        System.out.println("Baglanti sirasinda hata olustu");
+                    });
+                }
+            });
+        }).start();
+    }
+
+    public void disconnectOnlineBattleSession()
+    {
+        System.out.println("RC Battle Baglanti kesiliyor...");
+        this.buttonReady.setClickable(false);
+        new Thread(() -> {
+
+            /* Wait until updater thread stops */
+            synchronized (battleSessionUpdaterMutex)
+            {
+                try
+                {
+                    EntranceActivity.this.battle_session_connection = false;
+                    while(!this.battleSessionUpdaterThreadStopped)
+                        battleSessionUpdaterMutex.wait();
+                }
+                catch (Exception ex)
+                {
+                    System.out.println("Disconnect Button DB Handler Updater Wait : " + ex.getMessage());
+                }
+            }
+
+            /* Wait until receiver thread stops */
+            synchronized (battleSessionReceiverMutex)
+            {
+                try
+                {
+                    EntranceActivity.this.battle_session_connection = false;
+                    while(!this.battleSessionReceiverThreadStopped)
+                        battleSessionReceiverMutex.wait();
+                }
+                catch (Exception ex)
+                {
+                    System.out.println("Disconnect Button DB Handler Receiver Wait : " + ex.getMessage());
+                }
+            }
+
+            DatabaseReference ref = FirebaseDatabase.getInstance().getReference(RC_BATTLE_SESSION_DB_FILED).child(this.baglanilanAracDeviceNameTextView.getText().toString());
+            ref.removeValue().addOnCompleteListener(task -> {
+                if(task.isSuccessful())
+                {
+                    EntranceActivity.this.runOnUiThread(() -> {
+                        EntranceActivity.this.buttonReady.setClickable(true);
+                        EntranceActivity.this.buttonReady.setText(R.string.start_button_text);
+                        EntranceActivity.this.macDurumuTextView.setText("");
+                        EntranceActivity.this.rakipAracDeviceNameTextView.setText("-");
+                        System.out.println("RC Battle Baglanti kesildi");
+                    });
+                }
+                else
+                {
+                    EntranceActivity.this.runOnUiThread(() -> {
+                        EntranceActivity.this.buttonReady.setClickable(true);
+                        System.out.println("RC Battle Baglanti Kesilemedi");
+                    });
+
+                    /* Restart the updater thread */
+                    EntranceActivity.this.battle_session_connection = true;
+                    this.startBattleSessionUpdaterThread();
+                }
+            });
+        }).start();
+    }
+
+    public void startBattleSessionUpdaterThread()
+    {
+        new Thread(() -> {
+
+            System.out.println("Battle Session Updater Thread Started");
+            DatabaseReference ref = FirebaseDatabase.getInstance().getReference(RC_BATTLE_SESSION_DB_FILED).child(this.baglanilanAracDeviceNameTextView.getText().toString());
+            HashMap<String, String> db_entry = new HashMap<>();
+
+            SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+
+            // Start data receiver thread.
+            this.startBattleSessionReceiverThread();
+
+            while(this.battle_session_connection)
+            {
+                try
+                {
+                    /* update score and timestamp on the database */
+                    Date timestamp = new Date();
+                    String userScore = "";
+                    synchronized (userScoreMutex)
+                    {
+                        userScore = kullaniciSkorTextView.getText().toString();
+                    }
+
+                    db_entry.put("score", userScore);
+                    db_entry.put("timestamp", formatter.format(timestamp));
+                    ref.setValue(db_entry);
+
+                    Thread.sleep(1000);
+                }
+                catch (Exception ex)
+                {
+                    System.out.println("Battle Session Updater Thread Exception  : " + ex.getMessage());
+                }
+            }
+
+            this.battleSessionUpdaterThreadStopped = true;
+            synchronized (this.battleSessionUpdaterMutex)
+            {
+                this.battleSessionUpdaterMutex.notifyAll();
+            }
+
+            System.out.println("Battle Session Updater Thread Stopped");
+        }).start();
+    }
+
+    public void startBattleSessionReceiverThread()
+    {
+        new Thread(() -> {
+
+            System.out.println("Battle Session Receiver Thread Started");
+            this.runOnUiThread(() -> {
+                this.macDurumuTextView.setText(R.string.enemy_waiting_text);
+            });
+
+            /* wait until enemy connected */
+            while(this.battle_session_connection && !this.enemyConnected)
+            {
+                try
+                {
+                    DatabaseReference ref = FirebaseDatabase.getInstance().getReference(RC_BATTLE_SESSION_DB_FILED);
+                    ref.addValueEventListener(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot snapshot) {
+                            Log.i("DB Retrieve" ,"Current Connection Count : "+snapshot.getChildrenCount());
+                            for (DataSnapshot postSnapshot: snapshot.getChildren())
+                            {
+                                DBSessionEntry post = postSnapshot.getValue(DBSessionEntry.class);
+                                post.setId(postSnapshot.getKey());
+
+                                Log.i("DB Retrieve" ,"Connection : " + post);
+
+                                if(!post.getId().equals(EntranceActivity.this.baglanilanAracDeviceNameTextView.getText().toString()))
+                                {
+                                    // Enemy connected.
+                                    EntranceActivity.this.connectedEnemyID = post.getId();
+                                    EntranceActivity.this.enemyConnected = true;
+                                    ref.removeEventListener(this);
+                                }
+                            }
+                            System.out.println("-----------------------------------");
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError error) {
+
+                        }
+                    });
+
+                    System.out.println("No enemy connected. Waiting...");
+                    Thread.sleep(1000);
+                }
+                catch (Exception ex)
+                {
+                    System.out.println("Enemy wait exception : " + ex.getMessage());
+                }
+            }
+
+            System.out.println("Enemy Phone Connected ! Starting to listen...");
+            EntranceActivity.this.runOnUiThread(() -> {
+                this.rakipAracDeviceNameTextView.setText(this.connectedEnemyID);
+                this.macDurumuTextView.setText(R.string.match_started_text);
+            });
+
+            while(this.battle_session_connection && enemyConnected)
+            {
+                try
+                {
+                    /* Get enemy information */
+                    DatabaseReference ref = FirebaseDatabase.getInstance().getReference(RC_BATTLE_SESSION_DB_FILED).child(this.connectedEnemyID);
+                    ref.addValueEventListener(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot snapshot)
+                        {
+                            DBSessionEntry enemyInfo = snapshot.getValue(DBSessionEntry.class);
+                            if(null == enemyInfo)
+                            {
+                                ref.removeEventListener(this);
+                                EntranceActivity.this.enemyConnected = false;
+                                EntranceActivity.this.disconnectOnlineBattleSession();
+
+                                // Show different messages according to canceller.
+                                if(!cancelClickedByOwn)
+                                {
+                                    EntranceActivity.this.runOnUiThread(() -> Toast.makeText(EntranceActivity.this, "Rakip Bağlantısı Koptu. Maç İptal Edildi.", Toast.LENGTH_LONG).show());
+                                }
+                                else
+                                {
+                                    EntranceActivity.this.runOnUiThread(() -> Toast.makeText(EntranceActivity.this, "Bağlantı Koptu. Maç İptal Edildi.", Toast.LENGTH_LONG).show());
+                                }
+                                return;
+                            }
+                            enemyInfo.setId(EntranceActivity.this.connectedEnemyID);
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError error) {
+                            Log.e("DB Retrieve : ", "Enemy Data Cannot Retrieved " + error.getMessage());
+                        }
+                    });
+
+                    Thread.sleep(1000);
+                }
+                catch (Exception ex)
+                {
+                    System.out.println("Battle Session Receiver Thread : " + ex.getMessage());
+                }
+            }
+
+            this.battleSessionReceiverThreadStopped = true;
+            this.enemyConnected = false;
+            synchronized (this.battleSessionReceiverMutex)
+            {
+                this.battleSessionReceiverMutex.notifyAll();
+            }
+
+            System.out.println("Battle Session Receiver Thread Stopped");
+        }).start();
+    }
+
+    public static final class DBSessionEntry
+    {
+        private String id;
+        private String timestamp;
+        private String score;
+
+        public DBSessionEntry(){
+
+        }
+
+        public String getId() {
+            return id;
+        }
+
+        public void setId(String id) {
+            this.id = id;
+        }
+
+        public String getTimestamp() {
+            return timestamp;
+        }
+
+        public void setTimestamp(String timestamp) {
+            this.timestamp = timestamp;
+        }
+
+        @Override
+        public String toString()
+        {
+            return "[id:" + this.id + ", score:"+this.score + ", timestamp:" + this.timestamp + "]";
+        }
+
+        public String getScore() {
+            return score;
+        }
+
+        public void setScore(String score) {
+            this.score = score;
+        }
     }
 }

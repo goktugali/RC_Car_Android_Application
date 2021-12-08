@@ -11,7 +11,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
-import com.example.xpark.Activities.ParkingInformationActivity;
 import com.example.xpark.Module.CarPark;
 import com.example.xpark.Module.User;
 import com.example.xpark.Utils.ToastMessageConstants;
@@ -30,7 +29,6 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.MutableData;
 import com.google.firebase.database.Transaction;
 import com.google.firebase.database.ValueEventListener;
-import com.google.zxing.common.StringUtils;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -324,20 +322,7 @@ public class FirebaseCarparkManager {
                 System.out.println("Commit check : " + committed + " " + currentData.getValue());
                 if(committed)
                 {
-                    /* switch next activity */
-                    new Thread(() -> {
-                        try {
-                            Thread.sleep(2000);
-                            Intent intent = new Intent(activity, ParkingInformationActivity.class);
-                            intent.putExtra("CURRENT_USER",user);
-                            intent.putExtra("CARPARK",carpark);
-                            activity.startActivity(intent);
-                            activity.finish();
-                        }catch (InterruptedException ex)
-                        {
 
-                        }
-                    }).start();
                 }
                 else
                     activity.runOnUiThread(() -> Toasty.warning(activity.getApplicationContext(),ToastMessageConstants.TOAST_MSG_INFO_MAP_UPDATED,Toast.LENGTH_SHORT).show());
