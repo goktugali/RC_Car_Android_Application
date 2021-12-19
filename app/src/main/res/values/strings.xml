@@ -15,8 +15,8 @@
     <string name="baglanti_durumu_bagli_text">Bağlı</string>
     <string name="fire_button_text">Fire</string>
     <string name="gas_button_text">GAZ</string>
-    <string name="gear_d_text">D</string>
-    <string name="gear_r_text">R</string>
+    <string name="gear_d_text">H</string>
+    <string name="gear_r_text">Y</string>
     <string name="batarya_bilgi_text">Batarya:</string>
     <string name="match_started_text">\u0020\u0020\u0020\u0020\u0020Maç Başladı</string>
     <string name="enemy_waiting_text">Rakip Bekleniyor</string>

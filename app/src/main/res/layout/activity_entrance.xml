@@ -232,8 +232,8 @@
             android:layout_gravity="center">
             <Button
                 android:id="@+id/fire_button"
-                android:layout_width="100dp"
-                android:layout_height="35dp"
+                android:layout_width="120dp"
+                android:layout_height="55dp"
                 android:layout_marginStart="20dp"
                 android:background="@drawable/rounded_button_background"
                 android:text="@string/fire_button_text"
@@ -276,14 +276,15 @@
 
         <FrameLayout
             android:layout_width="32dp"
-            android:layout_height="132dp">
+            android:layout_height="182dp">
 
             <SeekBar
                 android:id="@+id/seekBarThrottle"
-                android:layout_width="132dp"
+                android:layout_width="182dp"
                 android:layout_height="32dp"
                 android:layout_gravity="center"
-                android:rotation="270" />
+                android:rotation="270"
+                android:scaleY="3"/>
         </FrameLayout>
 
         <View

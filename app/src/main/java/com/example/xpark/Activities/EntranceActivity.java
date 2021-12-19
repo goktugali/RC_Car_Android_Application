@@ -1,5 +1,7 @@
-// Version : 0.0.2
+// Version : 0.0.3
 package com.example.xpark.Activities;
+
+import static java.lang.Math.abs;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -43,6 +45,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+
 import android.os.Vibrator;
 
 public class EntranceActivity extends AppCompatActivity implements SensorEventListener
@@ -88,6 +92,7 @@ public class EntranceActivity extends AppCompatActivity implements SensorEventLi
     private int RC_komut_throttlePos = 0;
     private int RC_komut_gearPosition = 0;
     private int RC_komut_fireTrigger = 0;
+    private boolean slowSpeedOn = false;
 
     private Thread rcCommandSenderThread;
     private Thread rcPacketListenerThread;
@@ -215,7 +220,7 @@ public class EntranceActivity extends AppCompatActivity implements SensorEventLi
                 this.RC_komut_steeringAngle = (rotation_mapped + 90);
 
                 this.wheelAngleTextView.setText(rotation_mapped + "");
-                int abs_roll = (int)Math.abs(roll_mapped);
+                int abs_roll = (int) abs(roll_mapped);
                 if(abs_roll < 10 || abs_roll > 170 || roll_mapped > 0)
                 {
                     // device is flat.
@@ -238,7 +243,8 @@ public class EntranceActivity extends AppCompatActivity implements SensorEventLi
     {
         /* GAS SEEK BAR */
         this.throttleSeekBar = (SeekBar)findViewById(R.id.seekBarThrottle);
-        this.throttleSeekBar.setMax(255);
+        this.throttleSeekBar.setMax(510);
+        this.throttleSeekBar.setProgress(255);
         this.throttleSeekBar.getThumb().mutate().setAlpha(OPACITY_NO_TOUCH);
         /* GAS SEEK BAR */
 
@@ -265,7 +271,8 @@ public class EntranceActivity extends AppCompatActivity implements SensorEventLi
         /* Bluetooth Aygit Spinner */
 
         /* Gear Position Switch */
-        this.gearPositionSwitch = (Switch)findViewById(R.id.gear_switch);
+        this.gearPositionSwitch = (Switch)findViewById(R.id.gear_switch); // Now it is speed selector.
+        this.gearPositionSwitch.setVisibility(View.INVISIBLE);
         /* Gear Position Switch */
 
         this.baglanilanAracDeviceNameTextView = (TextView)findViewById(R.id.kullanici_skor_bilgi_textView);
@@ -326,7 +333,7 @@ public class EntranceActivity extends AppCompatActivity implements SensorEventLi
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
                 System.out.println("Gaz komut bitti");
-                seekBar.setProgress(0);
+                seekBar.setProgress(255);
                 seekBar.getThumb().mutate().setAlpha(OPACITY_NO_TOUCH);
 
                 // Gonderilecek komut guncellenir.
@@ -343,9 +350,18 @@ public class EntranceActivity extends AppCompatActivity implements SensorEventLi
             public void onProgressChanged(SeekBar seekBar, int progress,
                                           boolean fromUser) {
                 // RC komut guncellenir.
-                if(progress>=0 && progress<= 255 && !EntranceActivity.this.isDeviceFlat)
+                if(progress>=0 && progress<= 510 && !EntranceActivity.this.isDeviceFlat)
                 {
-                    EntranceActivity.this.RC_komut_throttlePos = progress;
+                    int progress_mapped = progress - 255;
+
+                    if(progress_mapped < 0){
+                        EntranceActivity.this.RC_komut_gearPosition = 1;
+                    }
+                    else {
+                        EntranceActivity.this.RC_komut_gearPosition = 0;
+                    }
+                    System.out.println("Progress mapped : " + abs(progress_mapped));
+                    EntranceActivity.this.RC_komut_throttlePos = abs(progress_mapped);
                 }
             }
         });
@@ -399,14 +415,7 @@ public class EntranceActivity extends AppCompatActivity implements SensorEventLi
         });
 
         this.gearPositionSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if(isChecked)
-            {
-                EntranceActivity.this.RC_komut_gearPosition = 1;
-            }
-            else
-            {
-                EntranceActivity.this.RC_komut_gearPosition = 0;
-            }
+                EntranceActivity.this.slowSpeedOn = isChecked;
         });
 
         this.buttonReady.setOnClickListener(v -> {
@@ -828,7 +837,7 @@ public class EntranceActivity extends AppCompatActivity implements SensorEventLi
         {
             HashMap<String, String> newEntry = new HashMap<>();
             String target_car_id = this.baglanilanAracDeviceNameTextView.getText().toString();
-            newEntry.put("score","0");
+            newEntry.put("fired_ctr","0");
             newEntry.put("timestamp","0");
 
             DatabaseReference ref = FirebaseDatabase.getInstance().getReference(RC_BATTLE_SESSION_DB_FILED).child(target_car_id);
@@ -942,11 +951,11 @@ public class EntranceActivity extends AppCompatActivity implements SensorEventLi
                         userScore = kullaniciSkorTextView.getText().toString();
                     }
 
-                    db_entry.put("score", userScore);
+                    db_entry.put("fired_ctr", userScore);
                     db_entry.put("timestamp", formatter.format(timestamp));
                     ref.setValue(db_entry);
 
-                    Thread.sleep(1000);
+                    Thread.sleep(2000);
                 }
                 catch (Exception ex)
                 {
@@ -1038,19 +1047,33 @@ public class EntranceActivity extends AppCompatActivity implements SensorEventLi
                                 ref.removeEventListener(this);
                                 EntranceActivity.this.enemyConnected = false;
                                 EntranceActivity.this.disconnectOnlineBattleSession();
-
-                                // Show different messages according to canceller.
-                                if(!cancelClickedByOwn)
-                                {
-                                    EntranceActivity.this.runOnUiThread(() -> Toast.makeText(EntranceActivity.this, "Rakip Bağlantısı Koptu. Maç İptal Edildi.", Toast.LENGTH_LONG).show());
-                                }
-                                else
-                                {
-                                    EntranceActivity.this.runOnUiThread(() -> Toast.makeText(EntranceActivity.this, "Bağlantı Koptu. Maç İptal Edildi.", Toast.LENGTH_LONG).show());
-                                }
                                 return;
                             }
+
                             enemyInfo.setId(EntranceActivity.this.connectedEnemyID);
+                            // Rakip vurulma sayisi skora eklenir.
+                            EntranceActivity.this.kullaniciSkorTextView.setText(enemyInfo.fired_ctr);
+
+                            try
+                            {
+                                // Get enemy timestamp
+                                Date enemyTimeStamp = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").parse(enemyInfo.getTimestamp());
+
+                                // Get current time
+                                Date currentTimeStamp = new Date();
+
+                                long timeDiffMs = abs(enemyTimeStamp.getTime() - currentTimeStamp.getTime());
+                                if (TimeUnit.MILLISECONDS.toSeconds(timeDiffMs) > 10)
+                                {
+                                    ref.removeEventListener(this);
+                                    EntranceActivity.this.enemyConnected = false;
+                                    EntranceActivity.this.disconnectOnlineBattleSession();
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                System.out.println("Rakip timestamp parse edilemiyor.. :" + ex.getMessage());
+                            }
                         }
 
                         @Override
@@ -1065,6 +1088,18 @@ public class EntranceActivity extends AppCompatActivity implements SensorEventLi
                 {
                     System.out.println("Battle Session Receiver Thread : " + ex.getMessage());
                 }
+            }
+
+            // Show different messages according to canceller.
+            if(!cancelClickedByOwn)
+            {
+                System.out.println("Rakip bağlantısı koptu");
+                EntranceActivity.this.runOnUiThread(() -> Toast.makeText(EntranceActivity.this, "Rakip Bağlantısı Koptu. Maç İptal Edildi.", Toast.LENGTH_LONG).show());
+            }
+            else
+            {
+                System.out.println("Bağlantı koptu");
+                EntranceActivity.this.runOnUiThread(() -> Toast.makeText(EntranceActivity.this, "Bağlantı Koptu. Maç İptal Edildi.", Toast.LENGTH_LONG).show());
             }
 
             this.battleSessionReceiverThreadStopped = true;
@@ -1082,7 +1117,7 @@ public class EntranceActivity extends AppCompatActivity implements SensorEventLi
     {
         private String id;
         private String timestamp;
-        private String score;
+        private String fired_ctr;
 
         public DBSessionEntry(){
 
@@ -1107,15 +1142,15 @@ public class EntranceActivity extends AppCompatActivity implements SensorEventLi
         @Override
         public String toString()
         {
-            return "[id:" + this.id + ", score:"+this.score + ", timestamp:" + this.timestamp + "]";
+            return "[id:" + this.id + ", fired_ctr:"+this.fired_ctr + ", timestamp:" + this.timestamp + "]";
         }
 
-        public String getScore() {
-            return score;
+        public String getFired_ctr() {
+            return fired_ctr;
         }
 
-        public void setScore(String score) {
-            this.score = score;
+        public void setFired_ctr(String fired_ctr) {
+            this.fired_ctr = fired_ctr;
         }
     }
 }
