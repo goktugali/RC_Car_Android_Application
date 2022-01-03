@@ -3,7 +3,9 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
-        <entry key="..\:/Users/gktak/StudioProjects/Car-Park-Scanner-Project/app/src/main/res/layout/activity_entrance.xml" value="0.37445699391833187" />
+        <entry key="..\:/Users/gktak/StudioProjects/Car-Park-Scanner-Project/app/src/main/res/drawable/ic_park.xml" value="0.2703125" />
+        <entry key="..\:/Users/gktak/StudioProjects/Car-Park-Scanner-Project/app/src/main/res/layout/activity_entrance.xml" value="0.40816326530612246" />
+        <entry key="..\:/Users/gktak/StudioProjects/Car-Park-Scanner-Project/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" value="0.2703125" />
       </map>
     </option>
   </component>

@@ -1,4 +1,4 @@
-// Version : 0.0.3
+// Version : 0.0.7
 package com.example.xpark.Activities;
 
 import static java.lang.Math.abs;
@@ -41,6 +41,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Set;
@@ -51,27 +52,27 @@ import android.os.Vibrator;
 
 public class EntranceActivity extends AppCompatActivity implements SensorEventListener
 {
-    private SeekBar throttleSeekBar;
-    private Button buttonConnect;
-    private Button buttonFireTrigger;
-    private Button buttonReady;
-    private TextView wheelAngleTextView;
-    private TextView btBaglantiDurumuTextView;
-    private Switch gearPositionSwitch;
-
-    private TextView rakipAracDeviceNameTextView; // rakip arac bluetooth cihaz ismi.
-    private TextView baglanilanAracDeviceNameTextView; // baglanilan aracin bluetooth cihaz ismi.
-    private TextView rakipSkorTextView; // rakip skor bilgisi.
-    private TextView kullaniciSkorTextView; // kullanici (ben) skor bilgisi.
-    private TextView bataryaBilgiTextView; // batarya bilgisi.
-    private TextView macDurumuTextView; // mac durum bilgisi.
+    private SeekBar     throttleSeekBar;
+    private Button      buttonConnect;
+    private Button      buttonFireTrigger;
+    private Button      buttonReady;
+    private Switch      speedModeSwitch;
+    private TextView    rakipAracDeviceNameTextView; // rakip arac bluetooth cihaz ismi.
+    private TextView    baglanilanAracDeviceNameTextView; // baglanilan aracin bluetooth cihaz ismi.
+    private TextView    rakipSkorTextView; // rakip skor bilgisi.
+    private TextView    kullaniciSkorTextView; // kullanici (ben) skor bilgisi.
+    private TextView    bataryaBilgiTextView; // batarya bilgisi.
+    private TextView    macDurumuTextView; // mac durum bilgisi.
+    private TextView    wheelAngleTextView;
+    private TextView    btBaglantiDurumuTextView;
+    private TextView    firmwareVersionTextView; // Firmware version number.
 
     private SensorManager mSensorManager;
     Sensor accelerometer;
     Sensor magnetometer;
 
-    private static final int OPACITY_NO_TOUCH = 100;
-    private static final int OPACITY_TOUCH = 255;
+    private static final int OPACITY_NO_TOUCH   = 100;
+    private static final int OPACITY_TOUCH      = 255;
 
     // Direksiyon aci bilgileri
     float[] mGravity;
@@ -88,10 +89,10 @@ public class EntranceActivity extends AppCompatActivity implements SensorEventLi
     private boolean btBaglantiDurumu = false;
 
     // Gonderilecek RC komut paketi.
-    private int RC_komut_steeringAngle = 0;
-    private int RC_komut_throttlePos = 0;
-    private int RC_komut_gearPosition = 0;
-    private int RC_komut_fireTrigger = 0;
+    private int RC_komut_steeringAngle  = 0;
+    private int RC_komut_throttlePos    = 0;
+    private int RC_komut_gearPosition   = 0;
+    private int RC_komut_fireTrigger    = 0;
     private boolean slowSpeedOn = false;
 
     private Thread rcCommandSenderThread;
@@ -271,12 +272,12 @@ public class EntranceActivity extends AppCompatActivity implements SensorEventLi
         /* Bluetooth Aygit Spinner */
 
         /* Gear Position Switch */
-        this.gearPositionSwitch = (Switch)findViewById(R.id.gear_switch); // Now it is speed selector.
-        this.gearPositionSwitch.setVisibility(View.INVISIBLE);
+        this.speedModeSwitch = (Switch)findViewById(R.id.gear_switch); // Now it is speed selector.
+        this.speedModeSwitch.setVisibility(View.INVISIBLE);
         /* Gear Position Switch */
 
         this.baglanilanAracDeviceNameTextView = (TextView)findViewById(R.id.kullanici_skor_bilgi_textView);
-        this.baglanilanAracDeviceNameTextView.setText("ASD"); // Todo : kaldirilacak.
+        this.baglanilanAracDeviceNameTextView.setText("-"); // Todo : kaldirilacak.
         this.kullaniciSkorTextView = (TextView)findViewById(R.id.kullanici_skor_textView);
 
         this.rakipAracDeviceNameTextView = (TextView)findViewById(R.id.rakip_skor_bilgi_textView);
@@ -284,6 +285,7 @@ public class EntranceActivity extends AppCompatActivity implements SensorEventLi
 
         this.bataryaBilgiTextView = (TextView)findViewById(R.id.bataryaYuzdesiTextView);
         this.macDurumuTextView = (TextView)findViewById(R.id.macDurumuTextView);
+        this.firmwareVersionTextView = (TextView)findViewById(R.id.fwareVersionBilgiTextView);
 
         /* CRC durumu blinker */
         new Thread(() ->
@@ -360,6 +362,8 @@ public class EntranceActivity extends AppCompatActivity implements SensorEventLi
                     else {
                         EntranceActivity.this.RC_komut_gearPosition = 0;
                     }
+
+                    progress_mapped = abs(progress_mapped);
                     System.out.println("Progress mapped : " + abs(progress_mapped));
                     EntranceActivity.this.RC_komut_throttlePos = abs(progress_mapped);
                 }
@@ -374,7 +378,14 @@ public class EntranceActivity extends AppCompatActivity implements SensorEventLi
                     BA.cancelDiscovery();
 
                     /* Secilen bluetooth aygiti elde edilir */
-                    String secilenAygitName = EntranceActivity.this.bluetoothDevicesSpinner.getSelectedItem().toString();
+                    Object spinnerSelectedItem = EntranceActivity.this.bluetoothDevicesSpinner.getSelectedItem();
+                    if(null == spinnerSelectedItem)
+                    {
+                        Toast.makeText(EntranceActivity.this, "Hata : Listeden cihaz seçin.", Toast.LENGTH_LONG).show();
+                        return;
+                    }
+
+                    String secilenAygitName = spinnerSelectedItem.toString();
                     BluetoothDevice secilenDevice = null;
                     for(BluetoothDevice device : EntranceActivity.this.pairedDevices)
                     {
@@ -414,7 +425,7 @@ public class EntranceActivity extends AppCompatActivity implements SensorEventLi
             return true;
         });
 
-        this.gearPositionSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+        this.speedModeSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
                 EntranceActivity.this.slowSpeedOn = isChecked;
         });
 
@@ -438,6 +449,7 @@ public class EntranceActivity extends AppCompatActivity implements SensorEventLi
         if(null == BA)
         {
             Toast.makeText(this, "Bluetooth Desteklenmiyor !", Toast.LENGTH_LONG).show();
+            this.buttonConnect.setClickable(false);
             return;
         }
 
@@ -481,14 +493,11 @@ public class EntranceActivity extends AppCompatActivity implements SensorEventLi
     {
         try
         {
-            // Hedef cihaz bilgileri resetlenir, reset paketi gonderilir.
-            // Reset OK paketi alinirsa, baglanti koparilir.
-            this.deviceResetOKPacketReceived = false;
-            while(!this.deviceResetOKPacketReceived)
-            {
-                sendDeviceResetPacket();
-                System.out.println("Reset paketi gonderiliyor....");
-            }
+            // Bagli olunan cihaz yok.
+            if(!btBaglantiDurumu)
+                return;
+
+            this.resetTargetDevice();
 
             this.btBaglantiDurumu = false;
             btSocket.close();
@@ -501,11 +510,13 @@ public class EntranceActivity extends AppCompatActivity implements SensorEventLi
                 System.out.println("Receiver threadin durmasi bekleniyor....");
             }
 
-            this.btBaglantiDurumuTextView.setTextColor(Color.RED);
-            this.btBaglantiDurumuTextView.setText(R.string.baglanti_durumu_bagli_degil_text);
-            this.buttonConnect.setText(R.string.connect_button_text);
-            this.bluetoothDevicesSpinner.setEnabled(true);
-            this.baglanilanAracDeviceNameTextView.setText("-");
+            EntranceActivity.this.runOnUiThread(() -> {
+                this.btBaglantiDurumuTextView.setTextColor(Color.RED);
+                this.btBaglantiDurumuTextView.setText(R.string.baglanti_durumu_bagli_degil_text);
+                this.buttonConnect.setText(R.string.connect_button_text);
+                this.bluetoothDevicesSpinner.setEnabled(true);
+                this.baglanilanAracDeviceNameTextView.setText("-");
+            });
 
             new Thread(() -> {
                 /* score update gui thread bitene kadar bekle */
@@ -527,6 +538,22 @@ public class EntranceActivity extends AppCompatActivity implements SensorEventLi
         catch (Exception ex)
         {
             Toast.makeText(EntranceActivity.this, "Hata : " + ex.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void resetTargetDevice()
+    {
+        // Bagli olunan cihaz yok.
+        if(!btBaglantiDurumu)
+            return;
+
+        // Hedef cihaz bilgileri resetlenir, reset paketi gonderilir.
+        // Reset OK paketi alinirsa, baglanti koparilir.
+        this.deviceResetOKPacketReceived = false;
+        while(!this.deviceResetOKPacketReceived)
+        {
+            sendDeviceResetPacket();
+            System.out.println("Reset paketi gonderiliyor....");
         }
     }
 
@@ -667,23 +694,29 @@ public class EntranceActivity extends AppCompatActivity implements SensorEventLi
                                                 this.lastCrcSuccesTime = new Date();
                                             }
 
+                                            int[] receivedBufferCpy = Arrays.copyOf(receivedDataBuffer, receivedDataBuffer.length);
+
                                             this.runOnUiThread(() -> {
 
-                                                int scoreOld = Integer.parseInt(kullaniciSkorTextView.getText().toString());
+                                                int scoreOld = Integer.parseInt(rakipSkorTextView.getText().toString());
                                                 EntranceActivity.this.scoreUpdateDone = false;
                                                 synchronized (this.userScoreMutex)
                                                 {
-                                                    kullaniciSkorTextView.setText("" + receivedDataBuffer[3]);
+                                                    rakipSkorTextView.setText("" + receivedBufferCpy[3]);
                                                 }
-                                                bataryaBilgiTextView.setText("" + receivedDataBuffer[2]);
                                                 EntranceActivity.this.scoreUpdateDone = true;
-                                                int scoreNew = Integer.parseInt(kullaniciSkorTextView.getText().toString());
+                                                bataryaBilgiTextView.setText("" + receivedBufferCpy[2]);
+                                                int scoreNew = Integer.parseInt(rakipSkorTextView.getText().toString());
 
                                                 // If shooted, vibrate the device.
                                                 if(scoreNew > scoreOld)
                                                 {
                                                     vibrator.vibrate(200);
                                                 }
+
+                                                // Show version number in the screen.
+                                                String versionText = getResources().getString(R.string.firmware_version_bilgi_text) + " v0." + receivedBufferCpy[0] + "." + receivedBufferCpy[1];
+                                                firmwareVersionTextView.setText(versionText);
                                             });
                                         }
                                     }
@@ -867,7 +900,11 @@ public class EntranceActivity extends AppCompatActivity implements SensorEventLi
     {
         System.out.println("RC Battle Baglanti kesiliyor...");
         this.buttonReady.setClickable(false);
+        this.buttonConnect.setClickable(false);
         new Thread(() -> {
+
+            /* Reset target RC car */
+            this.resetTargetDevice();
 
             /* Wait until updater thread stops */
             synchronized (battleSessionUpdaterMutex)
@@ -905,9 +942,13 @@ public class EntranceActivity extends AppCompatActivity implements SensorEventLi
                 {
                     EntranceActivity.this.runOnUiThread(() -> {
                         EntranceActivity.this.buttonReady.setClickable(true);
+                        if(null != this.BA)
+                            EntranceActivity.this.buttonConnect.setClickable(true);
                         EntranceActivity.this.buttonReady.setText(R.string.start_button_text);
                         EntranceActivity.this.macDurumuTextView.setText("");
                         EntranceActivity.this.rakipAracDeviceNameTextView.setText("-");
+                        EntranceActivity.this.rakipSkorTextView.setText("0");
+                        EntranceActivity.this.kullaniciSkorTextView.setText("0");
                         System.out.println("RC Battle Baglanti kesildi");
                     });
                 }
@@ -945,13 +986,13 @@ public class EntranceActivity extends AppCompatActivity implements SensorEventLi
                 {
                     /* update score and timestamp on the database */
                     Date timestamp = new Date();
-                    String userScore = "";
+                    String userFiredCtr = "";
                     synchronized (userScoreMutex)
                     {
-                        userScore = kullaniciSkorTextView.getText().toString();
+                        userFiredCtr = rakipSkorTextView.getText().toString();
                     }
 
-                    db_entry.put("fired_ctr", userScore);
+                    db_entry.put("fired_ctr", userFiredCtr);
                     db_entry.put("timestamp", formatter.format(timestamp));
                     ref.setValue(db_entry);
 
@@ -1025,11 +1066,14 @@ public class EntranceActivity extends AppCompatActivity implements SensorEventLi
                 }
             }
 
-            System.out.println("Enemy Phone Connected ! Starting to listen...");
-            EntranceActivity.this.runOnUiThread(() -> {
-                this.rakipAracDeviceNameTextView.setText(this.connectedEnemyID);
-                this.macDurumuTextView.setText(R.string.match_started_text);
-            });
+            if(battle_session_connection)
+            {
+                System.out.println("Enemy Phone Connected ! Starting to listen...");
+                EntranceActivity.this.runOnUiThread(() -> {
+                    this.rakipAracDeviceNameTextView.setText(this.connectedEnemyID);
+                    this.macDurumuTextView.setText(R.string.match_started_text);
+                });
+            }
 
             while(this.battle_session_connection && enemyConnected)
             {

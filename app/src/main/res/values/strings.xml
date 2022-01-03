@@ -1,23 +1,25 @@
 <resources>
-    <string name="app_name">XPark</string>
+    <string name="app_name">RC Car Battle</string>
     <string name="res_inMapAct">REZERVASYON</string>
     <string name="email">E-POSTA</string>
     <string name="password">ŞİFRE</string>
     <string name="phone">TELEFON</string>
     <string name="sign_up">ÜYE OL</string>
-    <string name="connect_button_text">BAĞLAN</string>
-    <string name="disconnect_button_text">DURDUR</string>
-    <string name="start_button_text">BAŞLAT</string>
-    <string name="cancel_button_text">İPTAL</string>
+    <string name="connect_button_text">CONNECT</string>
+    <string name="disconnect_button_text">DISCONNECT</string>
+    <string name="start_button_text">READY</string>
+    <string name="cancel_button_text">CANCEL</string>
     <string name="forgot_pw">Şifremi Unuttum</string>
-    <string name="baglanti_durumu_bilgi_text">Bağlantı Durumu :</string>
-    <string name="baglanti_durumu_bagli_degil_text">Bağlı Değil</string>
-    <string name="baglanti_durumu_bagli_text">Bağlı</string>
+    <string name="baglanti_durumu_bilgi_text">Connection :</string>
+    <string name="baglanti_durumu_bagli_degil_text">Not Connected</string>
+    <string name="baglanti_durumu_bagli_text">Connected</string>
     <string name="fire_button_text">Fire</string>
     <string name="gas_button_text">GAZ</string>
     <string name="gear_d_text">H</string>
     <string name="gear_r_text">Y</string>
-    <string name="batarya_bilgi_text">Batarya:</string>
-    <string name="match_started_text">\u0020\u0020\u0020\u0020\u0020Maç Başladı</string>
-    <string name="enemy_waiting_text">Rakip Bekleniyor</string>
+    <string name="batarya_bilgi_text">Battery:</string>
+    <string name="match_started_text">\u0020\u0020\u0020\u0020\u0020Match Started</string>
+    <string name="enemy_waiting_text">\u0020\u0020Waiting player</string>
+    <string name="app_version_bilgi_text">App v0.0.7</string>
+    <string name="firmware_version_bilgi_text">Firmware</string>
 </resources>
