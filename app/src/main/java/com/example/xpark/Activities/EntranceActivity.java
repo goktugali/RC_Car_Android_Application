@@ -1,4 +1,4 @@
-// Version : 0.0.7
+// Version : 0.0.8
 package com.example.xpark.Activities;
 
 import static java.lang.Math.abs;
@@ -126,6 +126,9 @@ public class EntranceActivity extends AppCompatActivity implements SensorEventLi
     private boolean cancelClickedByOwn = false;
     /* Databse Operations */
 
+    private boolean rcCarConnectionStopped = false;
+    private boolean dbConnectionStopped = false;
+
     @SuppressLint("RestrictedApi")
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -174,6 +177,7 @@ public class EntranceActivity extends AppCompatActivity implements SensorEventLi
     protected void onPause() {
         super.onPause();
         mSensorManager.unregisterListener(this);
+        System.out.println("Uygulama durduruluyor.... Baglantilar kopariliyor...");
     }
 
     public void onAccuracyChanged(Sensor sensor, int accuracy) {  }
@@ -261,6 +265,7 @@ public class EntranceActivity extends AppCompatActivity implements SensorEventLi
 
         /* READY BUTTON */
         this.buttonReady = (Button)findViewById(R.id.button_ready);
+        this.buttonReady.setEnabled(false);
         /* READY BUTTON */
 
         /* wheel angle text view */
@@ -449,7 +454,7 @@ public class EntranceActivity extends AppCompatActivity implements SensorEventLi
         if(null == BA)
         {
             Toast.makeText(this, "Bluetooth Desteklenmiyor !", Toast.LENGTH_LONG).show();
-            this.buttonConnect.setClickable(false);
+            this.buttonConnect.setEnabled(false);
             return;
         }
 
@@ -466,6 +471,7 @@ public class EntranceActivity extends AppCompatActivity implements SensorEventLi
 
     private void connectTargetDevice(BluetoothDevice secilenDevice)
     {
+        this.rcCarConnectionStopped = false;
         try
         {
             EntranceActivity.this.btSocket = secilenDevice.createRfcommSocketToServiceRecord(BT_UUID);
@@ -482,6 +488,7 @@ public class EntranceActivity extends AppCompatActivity implements SensorEventLi
             this.baglanilanAracDeviceNameTextView.setText(secilenDevice.getName()); // Baglanilan cihaz ismi arayuzde gosterilir.
 
             this.btBaglantiDurumu = true;
+            this.buttonReady.setEnabled(true);
         }
         catch (Exception ex)
         {
@@ -491,54 +498,63 @@ public class EntranceActivity extends AppCompatActivity implements SensorEventLi
 
     private void disconnectTargetDevice()
     {
-        try
-        {
-            // Bagli olunan cihaz yok.
-            if(!btBaglantiDurumu)
-                return;
-
-            this.resetTargetDevice();
-
-            this.btBaglantiDurumu = false;
-            btSocket.close();
-            btInputStream.close();
-            btOutputStream.close();
-
-            /* paket receive bitene kadar bekle */
-            while(this.packetReceiveState != PACKET_RECEIVE_STATES.PACKET_RECEIVE_SUSPENDED)
+        this.buttonReady.setEnabled(false);
+        new Thread(() -> {
+            try
             {
-                System.out.println("Receiver threadin durmasi bekleniyor....");
-            }
+                while(this.buttonReady.isEnabled());
 
-            EntranceActivity.this.runOnUiThread(() -> {
-                this.btBaglantiDurumuTextView.setTextColor(Color.RED);
-                this.btBaglantiDurumuTextView.setText(R.string.baglanti_durumu_bagli_degil_text);
-                this.buttonConnect.setText(R.string.connect_button_text);
-                this.bluetoothDevicesSpinner.setEnabled(true);
-                this.baglanilanAracDeviceNameTextView.setText("-");
-            });
-
-            new Thread(() -> {
-                /* score update gui thread bitene kadar bekle */
-                while(!this.scoreUpdateDone)
-                {
-                    System.out.println("GUI Threadinin Bitmesi Bekleniyor...");
+                // Bagli olunan cihaz yok.
+                if(!btBaglantiDurumu){
+                    this.rcCarConnectionStopped = true;
+                    return;
                 }
 
-                this.runOnUiThread(() -> {
-                    synchronized (userScoreMutex)
-                    {
-                        this.kullaniciSkorTextView.setText("0");
-                    }
-                    this.bataryaBilgiTextView.setText("0");
+                this.resetTargetDevice();
+
+                this.btBaglantiDurumu = false;
+                btSocket.close();
+                btInputStream.close();
+                btOutputStream.close();
+
+                /* paket receive bitene kadar bekle */
+                while(this.packetReceiveState != PACKET_RECEIVE_STATES.PACKET_RECEIVE_SUSPENDED)
+                {
+                    System.out.println("Receiver threadin durmasi bekleniyor....");
+                }
+
+                EntranceActivity.this.runOnUiThread(() -> {
+                    this.btBaglantiDurumuTextView.setTextColor(Color.RED);
+                    this.btBaglantiDurumuTextView.setText(R.string.baglanti_durumu_bagli_degil_text);
+                    this.buttonConnect.setText(R.string.connect_button_text);
+                    this.bluetoothDevicesSpinner.setEnabled(true);
+                    this.baglanilanAracDeviceNameTextView.setText("-");
                 });
 
-            }).start();
-        }
-        catch (Exception ex)
-        {
-            Toast.makeText(EntranceActivity.this, "Hata : " + ex.getMessage(), Toast.LENGTH_LONG).show();
-        }
+                new Thread(() -> {
+                    /* score update gui thread bitene kadar bekle */
+                    while(!this.scoreUpdateDone)
+                    {
+                        System.out.println("GUI Threadinin Bitmesi Bekleniyor...");
+                    }
+                    this.rcCarConnectionStopped = true;
+
+                    this.runOnUiThread(() -> {
+                        synchronized (userScoreMutex)
+                        {
+                            this.kullaniciSkorTextView.setText("0");
+                        }
+                        this.bataryaBilgiTextView.setText("0");
+
+                    });
+
+                }).start();
+            }
+            catch (Exception ex)
+            {
+                Toast.makeText(EntranceActivity.this, "Hata : " + ex.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        }).start();
     }
 
     private void resetTargetDevice()
@@ -865,9 +881,13 @@ public class EntranceActivity extends AppCompatActivity implements SensorEventLi
     public void connectOnlineBattleSession()
     {
         System.out.println("RC Battle Baglanti gerceklestiriliyor...");
-        this.buttonReady.setClickable(false);
+        this.buttonReady.setEnabled(false);
+        EntranceActivity.this.buttonConnect.setEnabled(false);
+        this.dbConnectionStopped = false;
         new Thread(() ->
         {
+            while(EntranceActivity.this.buttonReady.isEnabled());
+
             HashMap<String, String> newEntry = new HashMap<>();
             String target_car_id = this.baglanilanAracDeviceNameTextView.getText().toString();
             newEntry.put("fired_ctr","0");
@@ -879,7 +899,7 @@ public class EntranceActivity extends AppCompatActivity implements SensorEventLi
                 {
                     EntranceActivity.this.battle_session_connection = true;
                     EntranceActivity.this.runOnUiThread(() -> {
-                        EntranceActivity.this.buttonReady.setClickable(true);
+                        EntranceActivity.this.buttonReady.setEnabled(true);
                         EntranceActivity.this.buttonReady.setText(R.string.cancel_button_text);
                         System.out.println("Baglanti tamamlandi.");
                     });
@@ -888,7 +908,8 @@ public class EntranceActivity extends AppCompatActivity implements SensorEventLi
                 else
                 {
                     EntranceActivity.this.runOnUiThread(() -> {
-                        EntranceActivity.this.buttonReady.setClickable(true);
+                        EntranceActivity.this.buttonReady.setEnabled(true);
+                        EntranceActivity.this.buttonConnect.setEnabled(true);
                         System.out.println("Baglanti sirasinda hata olustu");
                     });
                 }
@@ -899,9 +920,18 @@ public class EntranceActivity extends AppCompatActivity implements SensorEventLi
     public void disconnectOnlineBattleSession()
     {
         System.out.println("RC Battle Baglanti kesiliyor...");
-        this.buttonReady.setClickable(false);
-        this.buttonConnect.setClickable(false);
+        if(!this.battle_session_connection)
+        {
+            this.dbConnectionStopped = true;
+            return;
+        }
+
+        this.buttonReady.setEnabled(false);
+        this.buttonConnect.setEnabled(false);
+
         new Thread(() -> {
+
+            while(this.buttonReady.isEnabled());
 
             /* Reset target RC car */
             this.resetTargetDevice();
@@ -940,22 +970,25 @@ public class EntranceActivity extends AppCompatActivity implements SensorEventLi
             ref.removeValue().addOnCompleteListener(task -> {
                 if(task.isSuccessful())
                 {
+                    EntranceActivity.this.dbConnectionStopped = true;
                     EntranceActivity.this.runOnUiThread(() -> {
-                        EntranceActivity.this.buttonReady.setClickable(true);
+                        EntranceActivity.this.buttonReady.setEnabled(true);
                         if(null != this.BA)
-                            EntranceActivity.this.buttonConnect.setClickable(true);
+                            EntranceActivity.this.buttonConnect.setEnabled(true);
                         EntranceActivity.this.buttonReady.setText(R.string.start_button_text);
                         EntranceActivity.this.macDurumuTextView.setText("");
                         EntranceActivity.this.rakipAracDeviceNameTextView.setText("-");
                         EntranceActivity.this.rakipSkorTextView.setText("0");
                         EntranceActivity.this.kullaniciSkorTextView.setText("0");
+                        EntranceActivity.this.buttonConnect.setEnabled(true);
                         System.out.println("RC Battle Baglanti kesildi");
+
                     });
                 }
                 else
                 {
                     EntranceActivity.this.runOnUiThread(() -> {
-                        EntranceActivity.this.buttonReady.setClickable(true);
+                        EntranceActivity.this.buttonReady.setEnabled(true);
                         System.out.println("RC Battle Baglanti Kesilemedi");
                     });
 

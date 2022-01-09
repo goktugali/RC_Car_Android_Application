@@ -19,7 +19,7 @@
     <string name="gear_r_text">Y</string>
     <string name="batarya_bilgi_text">Battery:</string>
     <string name="match_started_text">\u0020\u0020\u0020\u0020\u0020Match Started</string>
-    <string name="enemy_waiting_text">\u0020\u0020Waiting player</string>
-    <string name="app_version_bilgi_text">App v0.0.7</string>
+    <string name="enemy_waiting_text">\u0020\u0020\u0020\u0020Waiting player</string>
+    <string name="app_version_bilgi_text">App v0.0.8</string>
     <string name="firmware_version_bilgi_text">Firmware</string>
 </resources>
